@@ -2,6 +2,7 @@ package com.example.yzhou2.top10downloader;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.MainThread;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +11,10 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,12 +24,33 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
 
+    //private TextView xmlTextView;
+    private Button btnParse;
+    private ListView listApps;
+    private String mFileContents;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        //xmlTextView = (TextView) findViewById(R.id.xmlTextView);
+        btnParse = (Button) findViewById(R.id.btnParse);
+        btnParse.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //TODO: Add parse activation code
+                ParseApplications parseApplications = new ParseApplications(mFileContents);
+                parseApplications.process();
+                ArrayAdapter<Application> arrayAdapter = new ArrayAdapter<Application>(
+                        MainActivity.this, R.layout.list_item, parseApplications.getApplications());
+                listApps.setAdapter(arrayAdapter);
+            }
+        });
+        listApps = (ListView) findViewById(R.id.xmlListView);
+        DownloadData downloadData = new DownloadData();
+        downloadData.execute("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=10/xml");
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -59,7 +85,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class DownloadData extends AsyncTask<String, Void, String> {
-        private String mFileContents;
 
         @Override
         protected String doInBackground(String... params) {
@@ -74,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             Log.d("DownloadData", "Result was: " + result);
+            //xmlTextView.setText(mFileContents);
         }
 
         private String downloadXMLFile(String urlPath) {
@@ -100,6 +126,9 @@ public class MainActivity extends AppCompatActivity {
 
             } catch (IOException e) {
                 Log.d("DownloadData", "IO Exception Reading Data: " + e.getMessage());
+                e.printStackTrace();
+            } catch (SecurityException e) {
+                Log.d("DownloadData", "Security exception. Needs permissions?" + e.getMessage());
             }
 
             return null;
