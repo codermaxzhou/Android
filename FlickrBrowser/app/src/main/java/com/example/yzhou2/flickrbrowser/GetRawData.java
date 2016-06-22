@@ -38,7 +38,6 @@ public class GetRawData {
     }
 
     public String getmData() {
-
         return mData;
     }
 
